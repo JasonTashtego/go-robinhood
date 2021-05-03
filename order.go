@@ -50,6 +50,7 @@ type OrderOpts struct {
 	TimeInForce   TimeInForce
 	ExtendedHours bool
 	Stop, Force   bool
+	Oid 		  string
 }
 
 type apiOrder struct {
@@ -64,6 +65,7 @@ type apiOrder struct {
 	Quantity      uint64    `json:"quantity,omitempty"`
 	Side          OrderSide `json:"side,omitempty"`
 	ExtendedHours bool      `json:"extended_hours,omitempty"`
+	Oid 		  string    `json:"ref_id,omitempty"`
 
 	OverrideDayTradeChecks bool `json:"override_day_trade_checks,omitempty"`
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
@@ -84,6 +86,7 @@ func (c *Client) Order(ctx context.Context, i *Instrument, o OrderOpts) (*OrderO
 		ExtendedHours: o.ExtendedHours,
 		Price:         o.Price,
 		Trigger:       "immediate",
+		Oid:		   o.Oid,
 	}
 
 	if o.Stop {
@@ -139,6 +142,7 @@ type OrderOutput struct {
 	TimeInForce            string        `json:"time_in_force"`
 	Trigger                string        `json:"trigger"`
 	Type                   string        `json:"type"`
+	Oid 		  		   string    	 `json:"ref_id,omitempty"`
 
 	client *Client
 }
