@@ -42,60 +42,69 @@ const (
 	Limit
 )
 
-// OrderOpts encapsulates differences between order types
-type OrderOpts struct {
-	Side          OrderSide
-	Type          OrderType
-	Quantity      uint64
-	Price         float64
-	TimeInForce   TimeInForce
-	ExtendedHours bool
-	Stop, Force   bool
-	RefID 		  string
+const (
+	StopTrigger  = "stop"
+	ImmTrigger = "immediate"
+
+	TrailTypePrice = "price"
+)
+
+
+
+type TrailPeg struct {
+	Price struct {
+		Amount       float64 `json:"amount,string,omitempty"`
+		CurrencyCode string `json:"currency_code,omitempty"`
+	} `json:"price,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
-type apiOrder struct {
-	Account       string    `json:"account,omitempty"`
-	Instrument    string    `json:"instrument,omitempty"`
-	Symbol        string    `json:"symbol,omitempty"`
-	Type          string    `json:"type,omitempty"`
-	TimeInForce   string    `json:"time_in_force,omitempty"`
-	Trigger       string    `json:"trigger,omitempty"`
-	Price         float64   `json:"price,omitempty"`
-	StopPrice     float64   `json:"stop_price,omitempty"`
-	Quantity      uint64    `json:"quantity,omitempty"`
-	Side          OrderSide `json:"side,omitempty"`
-	ExtendedHours bool      `json:"extended_hours,omitempty"`
-	RefID 		  string    `json:"ref_id,omitempty"`
+type RhOrder struct {
+	Account       string  `json:"account,omitempty"`
+	ExtendedHours bool    `json:"extended_hours,omitempty"`
+	Instrument    string  `json:"instrument,omitempty"`
+	Price         float64 `json:"price,string,omitempty"`
+	Quantity      float64 `json:"quantity,string,omitempty"`
+	RefID         string  `json:"ref_id,omitempty"`
+	Side          string  `json:"side,omitempty"`
+	Symbol        string  `json:"symbol,omitempty"`
+	TimeInForce   string  `json:"time_in_force,omitempty"`
+	Trigger       string  `json:"trigger,omitempty"`
+	Type          string  `json:"type,omitempty"`
+	StopPrice     float64  `json:"stop_price,string,omitempty"`
+	TrailingPeg * TrailPeg `json:"trailing_peg,omitempty"`
 
 	OverrideDayTradeChecks bool `json:"override_day_trade_checks,omitempty"`
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
 }
 
+func (c * Client) CreateOrder(i * Instrument) * RhOrder {
+
+	newOrd := RhOrder{
+		Account:       c.Account.URL,
+		Symbol:        i.Symbol,
+		Instrument:    i.URL,
+		TimeInForce:   GTC.String(),
+		Type:          Market.String(),
+		Trigger: 	   ImmTrigger,
+	}
+	return &newOrd
+}
+
+
 // Order places an order for a given instrument. Cancellation of the given
 // context cancels only the _http request_ and not any orders that may have
 // been created regardless of the cancellation.
-func (c *Client) Order(ctx context.Context, i *Instrument, o OrderOpts) (*OrderOutput, error) {
-	a := apiOrder{
-		Account:       c.Account.URL,
-		Instrument:    i.URL,
-		Symbol:        i.Symbol,
-		Type:          strings.ToLower(o.Type.String()),
-		TimeInForce:   strings.ToLower(o.TimeInForce.String()),
-		Quantity:      o.Quantity,
-		Side:          o.Side,
-		ExtendedHours: o.ExtendedHours,
-		Price:         o.Price,
-		Trigger:       "immediate",
-		RefID:		   o.RefID,
-	}
+func (c *Client) SubmitOrder(ctx context.Context, rhOrd * RhOrder) (*OrderOutput, error) {
 
-	if o.Stop {
-		a.StopPrice = o.Price
-		a.Trigger = "stop"
-	}
+	// no fractional pennies.
+	usdPrice := int(rhOrd.Price*100)
+	rhOrd.Price = float64(usdPrice) / 100.0
+	rhOrd.Side = strings.ToLower(rhOrd.Side)
+	rhOrd.Type = strings.ToLower(rhOrd.Type)
+	rhOrd.TimeInForce = strings.ToLower(rhOrd.TimeInForce)
 
-	bs, err := json.Marshal(a)
+	bs, err := json.Marshal(rhOrd)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +164,15 @@ type OrderOutput struct {
 	OverrideDayTradeChecks  bool        `json:"override_day_trade_checks"`
 	ResponseCategory        string      `json:"response_category"`
 	StopTriggeredAt         time.Time   `json:"stop_triggered_at"`
-	LastTrailPrice          float64 	`json:"last_trail_price,string"`
+	TrailingPeg            struct {
+		Type       string `json:"type"`
+		Percentage int    `json:"percentage"`
+	} `json:"trailing_peg"`
+	LastTrailPrice  struct {
+		Amount       float64 `json:"amount,string"`
+		CurrencyCode string `json:"currency_code"`
+		CurrencyID   string `json:"currency_id"`
+	} `json:"last_trail_price"`
 	LastTrailPriceUpdatedAt time.Time   `json:"last_trail_price_updated_at"`
 	DollarBasedAmount       float64 	`json:"dollar_based_amount,string"`
 	TotalNotional           struct {
@@ -179,6 +196,8 @@ type OrderOutput struct {
 
 	client *Client
 }
+
+
 
 // Update returns any errors and updates the item with any recent changes.
 func (o *OrderOutput) Update(ctx context.Context) error {
