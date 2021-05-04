@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -50,7 +51,7 @@ type OrderOpts struct {
 	TimeInForce   TimeInForce
 	ExtendedHours bool
 	Stop, Force   bool
-	Oid 		  string
+	RefID 		  string
 }
 
 type apiOrder struct {
@@ -65,7 +66,7 @@ type apiOrder struct {
 	Quantity      uint64    `json:"quantity,omitempty"`
 	Side          OrderSide `json:"side,omitempty"`
 	ExtendedHours bool      `json:"extended_hours,omitempty"`
-	Oid 		  string    `json:"ref_id,omitempty"`
+	RefID 		  string    `json:"ref_id,omitempty"`
 
 	OverrideDayTradeChecks bool `json:"override_day_trade_checks,omitempty"`
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
@@ -86,7 +87,7 @@ func (c *Client) Order(ctx context.Context, i *Instrument, o OrderOpts) (*OrderO
 		ExtendedHours: o.ExtendedHours,
 		Price:         o.Price,
 		Trigger:       "immediate",
-		Oid:		   o.Oid,
+		RefID:		   o.RefID,
 	}
 
 	if o.Stop {
@@ -118,31 +119,63 @@ func (c *Client) Order(ctx context.Context, i *Instrument, o OrderOpts) (*OrderO
 
 // OrderOutput is the response from the Order api
 type OrderOutput struct {
-	Meta
-	Account                string        `json:"account"`
-	AveragePrice           float64       `json:"average_price,string"`
-	CancelURL              string        `json:"cancel"`
-	CreatedAt              string        `json:"created_at"`
-	CumulativeQuantity     string        `json:"cumulative_quantity"`
-	Executions             []interface{} `json:"executions"`
-	ExtendedHours          bool          `json:"extended_hours"`
-	Fees                   string        `json:"fees"`
-	ID                     string        `json:"id"`
-	Instrument             string        `json:"instrument"`
-	LastTransactionAt      string        `json:"last_transaction_at"`
-	OverrideDayTradeChecks bool          `json:"override_day_trade_checks"`
-	OverrideDtbpChecks     bool          `json:"override_dtbp_checks"`
-	Position               string        `json:"position"`
-	Price                  float64       `json:"price,string"`
-	Quantity               string        `json:"quantity"`
-	RejectReason           string        `json:"reject_reason"`
-	Side                   string        `json:"side"`
-	State                  string        `json:"state"`
-	StopPrice              float64       `json:"stop_price,string"`
-	TimeInForce            string        `json:"time_in_force"`
-	Trigger                string        `json:"trigger"`
-	Type                   string        `json:"type"`
-	Oid 		  		   string    	 `json:"ref_id,omitempty"`
+
+	ID                 string      `json:"id"`
+	RefID              string      `json:"ref_id"`
+	URL                string      `json:"url"`
+	Account            string      `json:"account"`
+	Position           string      `json:"position"`
+	CancelURL          string	   `json:"cancel"`
+	Instrument         string      `json:"instrument"`
+	CumulativeQuantity float64     `json:"cumulative_quantity,string"`
+	AveragePrice       float64     `json:"average_price,string"`
+	Fees               float64     `json:"fees,string"`
+	State              string      `json:"state"`
+	Type               string      `json:"type"`
+	Side               string      `json:"side"`
+	TimeInForce        string      `json:"time_in_force"`
+	Trigger            string      `json:"trigger"`
+	Price              float64     `json:"price,string"`
+	StopPrice          float64 	   `json:"stop_price,string"`
+	Quantity           float64     `json:"quantity,string"`
+	RejectReason       string      `json:"reject_reason"`
+	CreatedAt          time.Time   `json:"created_at"`
+	UpdatedAt          time.Time   `json:"updated_at"`
+	LastTransactionAt  time.Time   `json:"last_transaction_at"`
+	Executions         []struct {
+		Price                  float64     `json:"price,string"`
+		Quantity               float64     `json:"quantity,string"`
+		SettlementDate         string      `json:"settlement_date"`
+		Timestamp              time.Time   `json:"timestamp"`
+		ID                     string      `json:"id"`
+		IpoAccessExecutionRank string      `json:"ipo_access_execution_rank"`
+	} `json:"executions"`
+	ExtendedHours           bool        `json:"extended_hours"`
+	OverrideDtbpChecks      bool        `json:"override_dtbp_checks"`
+	OverrideDayTradeChecks  bool        `json:"override_day_trade_checks"`
+	ResponseCategory        string      `json:"response_category"`
+	StopTriggeredAt         time.Time   `json:"stop_triggered_at"`
+	LastTrailPrice          float64 	`json:"last_trail_price,string"`
+	LastTrailPriceUpdatedAt time.Time   `json:"last_trail_price_updated_at"`
+	DollarBasedAmount       float64 	`json:"dollar_based_amount,string"`
+	TotalNotional           struct {
+		Amount       float64 `json:"amount,string"`
+		CurrencyCode string `json:"currency_code"`
+		CurrencyID   string `json:"currency_id"`
+	} `json:"total_notional"`
+	ExecutedNotional struct {
+		Amount       float64 `json:"amount,string"`
+		CurrencyCode string `json:"currency_code"`
+		CurrencyID   string `json:"currency_id"`
+	} `json:"executed_notional"`
+	InvestmentScheduleID        string 		`json:"investment_schedule_id"`
+	IsIpoAccessOrder            bool        `json:"is_ipo_access_order"`
+	IpoAccessCancellationReason string	 	`json:"ipo_access_cancellation_reason"`
+	IpoAccessLowerCollaredPrice float64 	`json:"ipo_access_lower_collared_price,string"`
+	IpoAccessUpperCollaredPrice float64 	`json:"ipo_access_upper_collared_price,string"`
+	IpoAccessUpperPrice         float64 	`json:"ipo_access_upper_price,string"`
+	IpoAccessLowerPrice         float64	 	`json:"ipo_access_lower_price,string"`
+	IsIpoAccessPriceFinalized   bool        `json:"is_ipo_access_price_finalized"`
 
 	client *Client
 }
