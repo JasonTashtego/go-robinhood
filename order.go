@@ -223,6 +223,27 @@ func (o OrderOutput) Cancel(ctx context.Context) error {
 	return nil
 }
 
+func (c * Client) CancelOrderById(ctx context.Context, id string) error {
+
+	var ordUrl = EPOrders + id + "/cancel/"
+
+	post, err := http.NewRequest("POST", ordUrl, nil)
+	if err != nil {
+		return err
+	}
+
+	var o2 OrderOutput
+	err = c.DoAndDecode(ctx, post, &o2)
+	if err != nil {
+		return errors.Wrap(err, "could not decode response")
+	}
+
+	if o2.RejectReason != "" {
+		return errors.New(o2.RejectReason)
+	}
+	return nil
+}
+
 // RecentOrders returns any recent orders made by this client.
 func (c *Client) RecentOrders(ctx context.Context) ([]OrderOutput, error) {
 	var o struct {
@@ -238,6 +259,29 @@ func (c *Client) RecentOrders(ctx context.Context) ([]OrderOutput, error) {
 	}
 
 	return o.Results, nil
+}
+
+func (c *Client) GetOrders(ctx context.Context, nextUrl * string) ([]OrderOutput, string, error) {
+	var o struct {
+		Results []OrderOutput
+		Next string
+	}
+
+	url := EPOrders
+	if nextUrl != nil {
+		url = *nextUrl
+	}
+
+	err := c.GetAndDecode(ctx, url, &o)
+	if err != nil {
+		return o.Results, o.Next, err
+	}
+
+	for i := range o.Results {
+		o.Results[i].client = c
+	}
+
+	return o.Results, o.Next, nil
 }
 
 // AllOrders returns all orders made by this client.
