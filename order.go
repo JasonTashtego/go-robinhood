@@ -84,8 +84,8 @@ func (c * Client) CreateOrder(i * Instrument) * RhOrder {
 		Account:       c.Account.URL,
 		Symbol:        i.Symbol,
 		Instrument:    i.URL,
-		TimeInForce:   GTC.String(),
-		Type:          Market.String(),
+		TimeInForce:   strings.ToLower(GTC.String()),
+		Type:          strings.ToLower(Market.String()),
 		Trigger: 	   ImmTrigger,
 	}
 	return &newOrd
@@ -167,6 +167,10 @@ type OrderOutput struct {
 	TrailingPeg            struct {
 		Type       string `json:"type"`
 		Percentage int    `json:"percentage"`
+		Price struct {
+			Amount       float64 `json:"amount,string,omitempty"`
+			CurrencyCode string `json:"currency_code,omitempty"`
+		} `json:"price,omitempty"`
 	} `json:"trailing_peg"`
 	LastTrailPrice  struct {
 		Amount       float64 `json:"amount,string"`

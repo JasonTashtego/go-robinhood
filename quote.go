@@ -3,6 +3,7 @@ package robinhood
 import (
 	"context"
 	"strings"
+	"time"
 )
 
 // A Quote is a representation of the data returned by the Robinhood API for
@@ -19,7 +20,7 @@ type Quote struct {
 	PreviousCloseDate           string  `json:"previous_close_date"`
 	Symbol                      string  `json:"symbol"`
 	TradingHalted               bool    `json:"trading_halted"`
-	UpdatedAt                   string  `json:"updated_at"`
+	UpdatedAt                   time.Time  `json:"updated_at,string"`
 }
 
 // GetQuote returns all the latest stock quotes for the list of stocks provided
