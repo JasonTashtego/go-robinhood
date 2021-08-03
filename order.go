@@ -178,7 +178,11 @@ type OrderOutput struct {
 		CurrencyID   string `json:"currency_id"`
 	} `json:"last_trail_price"`
 	LastTrailPriceUpdatedAt time.Time   `json:"last_trail_price_updated_at"`
-	DollarBasedAmount       float64 	`json:"dollar_based_amount,string"`
+	DollarBasedAmount  struct {
+		Amount       float64 `json:"amount,string"`
+		CurrencyCode string `json:"currency_code"`
+		CurrencyID   string `json:"currency_id"`
+	} 	`json:"dollar_based_amount"`
 	TotalNotional           struct {
 		Amount       float64 `json:"amount,string"`
 		CurrencyCode string `json:"currency_code"`
