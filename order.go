@@ -61,7 +61,7 @@ type TrailPeg struct {
 
 type RhOrder struct {
 	Account       string  `json:"account,omitempty"`
-	ExtendedHours bool    `json:"extended_hours,omitempty"`
+	ExtendedHours bool    `json:"extended_hours"`
 	Instrument    string  `json:"instrument,omitempty"`
 	Price         float64 `json:"price,string,omitempty"`
 	Quantity      float64 `json:"quantity,string,omitempty"`
@@ -269,13 +269,16 @@ func (c *Client) RecentOrders(ctx context.Context) ([]OrderOutput, error) {
 	return o.Results, nil
 }
 
-func (c *Client) GetOrders(ctx context.Context, nextUrl * string) ([]OrderOutput, string, error) {
+func (c *Client) GetOrders(ctx context.Context, nextUrl * string, pgSize int64) ([]OrderOutput, string, error) {
 	var o struct {
 		Results []OrderOutput
 		Next string
 	}
 
 	url := EPOrders
+	if pgSize != 0 {
+		url = url + fmt.Sprintf("?page_size=%d",pgSize)
+	}
 	if nextUrl != nil {
 		url = *nextUrl
 	}
