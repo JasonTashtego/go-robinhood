@@ -3,7 +3,6 @@ package robinhood
 import (
 	"context"
 	"errors"
-
 	"fmt"
 )
 
@@ -38,6 +37,20 @@ type AssetCurrency struct {
 	Name       string  `json:"name"`
 }
 
+
+// Crypto Quote
+type CryptoQuote struct {
+	AskPrice  float64 `json:"ask_price,string"`
+	BidPrice  float64 `json:"bid_price,string"`
+	MarkPrice float64 `json:"mark_price,string"`
+	HighPrice float64 `json:"high_price,string"`
+	LowPrice  float64 `json:"low_price,string"`
+	OpenPrice float64 `json:"open_price,string"`
+	Symbol    string `json:"symbol"`
+	ID        string `json:"id"`
+	Volume    float64 `json:"volume,string"`
+}
+
 // GetCryptoCurrencyPairs will give which crypto currencies are tradeable and corresponding ids
 func (c *Client) GetCryptoCurrencyPairs(ctx context.Context) ([]CryptoCurrencyPair, error) {
 	var r struct{ Results []CryptoCurrencyPair }
@@ -61,3 +74,12 @@ func (c *Client) GetCryptoInstrument(ctx context.Context, symbol string) (*Crypt
 
 	return nil, errors.New("could not find given symbol")
 }
+
+// GetCryptoQuote gets the current quote for the instrument
+func (c *Client) GetCryptoQuote(ctx context.Context, cryptoInstrId string) ( CryptoQuote, error) {
+	url := EPMarket + "forex/quotes/" + cryptoInstrId + "/"
+ 	var r CryptoQuote
+	err := c.GetAndDecode(ctx, url, &r)
+	return r, err
+}
+
