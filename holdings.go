@@ -2,6 +2,7 @@ package robinhood
 
 import (
 	"context"
+	"net/url"
 	"time"
 )
 
@@ -37,7 +38,13 @@ type CryptoHolding struct {
 // GetCryptoHoldings returns crypto portfolio info
 func (c *Client) GetCryptoHoldings(ctx context.Context) ([]CryptoHolding, error) {
 	var p struct{ Results []CryptoHolding }
-	var hdlUrl = EPCryptoHoldings
-	err := c.GetAndDecode(ctx, hdlUrl, &p)
+	u, err := url.Parse(EPCryptoHoldings)
+	if err != nil {
+		return nil, err
+	}
+	px := PositionParams{NonZero: true}
+	u.RawQuery = px.encode()
+
+	err = c.GetAndDecode(ctx, u.String(), &p)
 	return p.Results, err
 }

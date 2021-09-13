@@ -15,33 +15,33 @@ import (
 )
 
 const (
-
-	Tradable  = "tradable"
+	Tradable    = "tradable"
 	NonTradable = "untradable"
-
 )
 
 // CryptoOrder is the payload to create a crypto currency order
 type CryptoOrder struct {
-	AccountID               string        `json:"account_id"`
-	CurrencyPairID          string        `json:"currency_pair_id"`
-	Price                   float64       `json:"price,string"`
-	Quantity                float64       `json:"quantity,string"`
-	RefID                   string        `json:"ref_id"`
-	Side                    string        `json:"side"`
-	TimeInForce             string        `json:"time_in_force"`
-	Type                    string        `json:"type"`
+	AccountID      string  `json:"account_id"`
+	CurrencyPairID string  `json:"currency_pair_id"`
+	Price          float64 `json:"price,string"`
+	Quantity       float64 `json:"quantity,string"`
+	RefID          string  `json:"ref_id"`
+	Side           string  `json:"side"`
+	TimeInForce    string  `json:"time_in_force"`
+	Type           string  `json:"type"`
+
+	AmountInDollars float64 `json:"-"`
 }
 
 // CryptoOrderOutput holds the response from api
 type CryptoOrderOutput struct {
-	AccountID          string      `json:"account_id"`
-	AveragePrice       float64     `json:"average_price,string"`
-	CancelURL          string      `json:"cancel_url"`
-	CreatedAt          time.Time   `json:"created_at"`
-	CumulativeQuantity float64     `json:"cumulative_quantity,string"`
-	CurrencyPairID     string      `json:"currency_pair_id"`
-	EnteredPrice       float64     `json:"entered_price,string"`
+	AccountID          string    `json:"account_id"`
+	AveragePrice       float64   `json:"average_price,string"`
+	CancelURL          string    `json:"cancel_url"`
+	CreatedAt          time.Time `json:"created_at"`
+	CumulativeQuantity float64   `json:"cumulative_quantity,string"`
+	CurrencyPairID     string    `json:"currency_pair_id"`
+	EnteredPrice       float64   `json:"entered_price,string"`
 	Executions         []struct {
 		EffectivePrice float64   `json:"effective_price,string"`
 		ID             string    `json:"id"`
@@ -54,12 +54,12 @@ type CryptoOrderOutput struct {
 	LastTransactionAt       time.Time   `json:"last_transaction_at"`
 	Price                   float64     `json:"price,string"`
 	Quantity                float64     `json:"quantity,string"`
-	RejectReason       		string      `json:"reject_reason"`
+	RejectReason            string      `json:"reject_reason"`
 	RefID                   string      `json:"ref_id"`
 	RoundedExecutedNotional float64     `json:"rounded_executed_notional,string"`
 	Side                    string      `json:"side"`
 	State                   string      `json:"state"`
-	StopPrice          		float64     `json:"stop_price,string"`
+	StopPrice               float64     `json:"stop_price,string"`
 	TimeInForce             string      `json:"time_in_force"`
 	Type                    string      `json:"type"`
 	UpdatedAt               time.Time   `json:"updated_at"`
@@ -67,41 +67,27 @@ type CryptoOrderOutput struct {
 	client *Client
 }
 
-// CryptoOrderOpts encapsulates differences between order types
-type CryptoOrderOpts struct {
-	RefID			string
-	Side            OrderSide
-	Type            OrderType
-	AmountInDollars float64
-	Quantity        float64
-	Price           float64
-	TimeInForce     TimeInForce
-	ExtendedHours   bool
-	Stop, Force     bool
+func (c *Client) CreateCryptoOrder(currId string) *CryptoOrder {
+
+	newOrd := CryptoOrder{
+		AccountID:       c.CryptoAccount.ID,
+		CurrencyPairID:  currId,
+		Price:           0,
+		Quantity:        0,
+		TimeInForce:     strings.ToLower(GTC.String()),
+		Type:            strings.ToLower(Market.String()),
+		AmountInDollars: 0,
+	}
+	return &newOrd
 }
 
 // CryptoOrder will actually place the order
-func (c *Client) CryptoOrder(ctx context.Context, cryptoPair CryptoCurrencyPair, o CryptoOrderOpts) (*CryptoOrderOutput, error) {
+func (c *Client) SubmitCryptoOrder(ctx context.Context, o *CryptoOrder) (*CryptoOrderOutput, error) {
 
-	var qty float64
 	if o.Quantity == 0 {
-		qty = math.Round(o.AmountInDollars / o.Price)
-	} else {
-		qty = o.Quantity
+		o.Quantity = math.Round(o.AmountInDollars / o.Price)
 	}
-
-	a := CryptoOrder{
-		AccountID:      c.CryptoAccount.ID,
-		CurrencyPairID: cryptoPair.ID,
-		Quantity:       qty,
-		Price:          o.Price,
-		RefID:          o.RefID,
-		Side:           strings.ToLower(o.Side.String()),
-		TimeInForce:    strings.ToLower(o.TimeInForce.String()),
-		Type:           strings.ToLower(o.Type.String()),
-	}
-
-	payload, err := json.Marshal(a)
+	payload, err := json.Marshal(o)
 
 	if err != nil {
 		return nil, err
@@ -121,7 +107,7 @@ func (c *Client) CryptoOrder(ctx context.Context, cryptoPair CryptoCurrencyPair,
 }
 
 // Cancel will cancel the order.
-func (o CryptoOrderOutput) Cancel(ctx context.Context) error {
+func (o *CryptoOrderOutput) Cancel(ctx context.Context) error {
 	post, err := http.NewRequest("POST", o.CancelURL, nil)
 	if err != nil {
 		return err
@@ -139,4 +125,36 @@ func (o CryptoOrderOutput) Cancel(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize int64) ([]CryptoOrderOutput, string, error) {
+	var o struct {
+		Results []CryptoOrderOutput
+		Next    string
+	}
+
+	url := EPCryptoOrders
+	if pgSize != 0 {
+		url = url + fmt.Sprintf("?page_size=%d", pgSize)
+	}
+	if nextUrl != nil {
+		url = *nextUrl
+	}
+
+	err := c.GetAndDecode(ctx, url, &o)
+	if err != nil {
+		return o.Results, o.Next, err
+	}
+
+	for i := range o.Results {
+		o.Results[i].client = c
+	}
+
+	return o.Results, o.Next, nil
+}
+
+// Update returns any errors and updates the item with any recent changes.
+func (o *CryptoOrderOutput) Update(ctx context.Context) error {
+	ordUrl := EPCryptoOrders + fmt.Sprintf("%s", o.ID)
+	return o.client.GetAndDecode(ctx, ordUrl, o)
 }
