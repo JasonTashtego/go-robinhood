@@ -34,6 +34,9 @@ const (
 	EPOptions             = EPBase + "options/"
 	EPMarket              = EPBase + "marketdata/"
 	EPOptionQuote         = EPMarket + "options/"
+
+	apiWaitTime int64 = 300
+
 )
 
 // A Client is a helpful abstraction around some common metadata required for
@@ -43,6 +46,8 @@ type Client struct {
 	Account       *Account
 	CryptoAccount *CryptoAccount
 	*http.Client
+
+	lastCall time.Time
 }
 
 // Dial returns a client given a TokenGetter. TokenGetter implementations are
@@ -90,6 +95,14 @@ func (e ErrorMap) Error() string {
 // DoAndDecode provides useful abstractions around common errors and decoding
 // issues.
 func (c *Client) DoAndDecode(ctx context.Context, req *http.Request, dest interface{}) error {
+
+	// api-throttle
+	df := time.Now().Sub(c.lastCall)
+	if df.Milliseconds() < apiWaitTime {
+		time.Sleep(time.Duration(apiWaitTime-df.Milliseconds()) * time.Millisecond)
+	}
+	c.lastCall = time.Now()
+	
 	res, err := c.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
