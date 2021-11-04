@@ -35,7 +35,7 @@ const (
 	EPMarket              = EPBase + "marketdata/"
 	EPOptionQuote         = EPMarket + "options/"
 
-	apiWaitTime int64 = 300
+	apiWaitTime int64 = 100
 
 )
 
