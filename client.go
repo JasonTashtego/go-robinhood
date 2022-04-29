@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -36,7 +37,6 @@ const (
 	EPOptionQuote         = EPMarket + "options/"
 
 	apiWaitTime int64 = 100
-
 )
 
 // A Client is a helpful abstraction around some common metadata required for
@@ -55,6 +55,27 @@ type Client struct {
 func Dial(ctx context.Context, s oauth2.TokenSource) (*Client, error) {
 	c := &Client{
 		Client: oauth2.NewClient(context.Background(), s),
+	}
+
+	// allo redirect to secure only.
+	c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+
+		if req.Response != nil {
+			toUrl := req.Response.Header.Get("Location")
+
+			u, err := url.Parse(toUrl)
+			if err != nil {
+				return http.ErrUseLastResponse
+			}
+
+			if strings.ToLower(u.Scheme) != "https" {
+				return http.ErrUseLastResponse
+			}
+
+			// allow https
+			return nil
+		}
+		return http.ErrUseLastResponse
 	}
 
 	a, err := c.GetAccounts(ctx)
@@ -102,7 +123,7 @@ func (c *Client) DoAndDecode(ctx context.Context, req *http.Request, dest interf
 		time.Sleep(time.Duration(apiWaitTime-df.Milliseconds()) * time.Millisecond)
 	}
 	c.lastCall = time.Now()
-	
+
 	res, err := c.Do(req.WithContext(ctx))
 	if err != nil {
 		return err
