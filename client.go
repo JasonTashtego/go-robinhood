@@ -70,7 +70,7 @@ func Dial(ctx context.Context, s oauth2.TokenSource) (*Client, error) {
 
 			if len(u.Scheme) > 0 {
 				if strings.ToLower(u.Scheme) != "https" {
-					return http.ErrUseLastResponse
+					return http.ErrNotSupported
 				}
 			}
 			// allow https, or same
