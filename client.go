@@ -95,6 +95,12 @@ func Dial(ctx context.Context, s oauth2.TokenSource) (*Client, error) {
 // GetAndDecode retrieves from the endpoint and unmarshals resulting json into
 // the provided destination interface, which must be a pointer.
 func (c *Client) GetAndDecode(ctx context.Context, url string, dest interface{}) error {
+
+	// No, just no http
+	if strings.HasPrefix(url, "http:") {
+		return http.ErrNotSupported
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err
