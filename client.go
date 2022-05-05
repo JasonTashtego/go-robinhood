@@ -98,7 +98,7 @@ func (c *Client) GetAndDecode(ctx context.Context, url string, dest interface{})
 
 	// No, just no http
 	if strings.HasPrefix(url, "http:") {
-		return http.ErrNotSupported
+		url = strings.ReplaceAll(url, "http:", "https:")
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
