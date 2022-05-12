@@ -80,11 +80,17 @@ func Dial(ctx context.Context, s oauth2.TokenSource) (*Client, error) {
 	}
 
 	a, err := c.GetAccounts(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if len(a) > 0 {
 		c.Account = &a[0]
 	}
 
 	ca, err := c.GetCryptoAccounts(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if len(ca) > 0 {
 		c.CryptoAccount = &ca[0]
 	}

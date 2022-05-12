@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -82,7 +83,9 @@ func (p *OAuth) Token() (*oauth2.Token, error) {
 		MFARequired bool   `json:"mfa_required"`
 		MFAType     string `json:"mfa_type"`
 	}
-	err = json.NewDecoder(res.Body).Decode(&o)
+
+	dtr, err := ioutil.ReadAll(res.Body)
+	err = json.Unmarshal(dtr, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode token")
 	}
@@ -91,5 +94,10 @@ func (p *OAuth) Token() (*oauth2.Token, error) {
 		return nil, ErrMFARequired
 	}
 	o.Token.Expiry = time.Now().Add(time.Duration(o.ExpiresIn) * time.Second)
+
+	if len(o.Token.AccessToken) == 0 {
+		return nil, errors.Errorf("Invalid Authorization [%s], Result %s", p.Username, string(dtr))
+	}
+
 	return &o.Token, nil
 }
