@@ -16,6 +16,7 @@ import (
 
 // Endpoints for the Robinhood API
 const (
+	EPHistory             = "https://bonfire.robinhood.com/"
 	EPBase                = "https://api.robinhood.com/"
 	EPCryptoBase          = "https://nummus.robinhood.com/"
 	EPCryptoOrders        = EPCryptoBase + "orders/"
@@ -35,6 +36,8 @@ const (
 	EPOptions             = EPBase + "options/"
 	EPMarket              = EPBase + "marketdata/"
 	EPOptionQuote         = EPMarket + "options/"
+
+	EPHistPortfolio = EPHistory + "portfolio/"
 
 	apiWaitTime int64 = 100
 )
