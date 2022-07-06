@@ -7,6 +7,8 @@ import (
 
 const (
 	TimeFrame3m = "3month"
+	TimeFrame1m = "month"
+	TimeFrame1y = "year"
 )
 
 type HistoryResponse struct {
