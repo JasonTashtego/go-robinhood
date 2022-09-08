@@ -127,6 +127,29 @@ func (o *CryptoOrderOutput) Cancel(ctx context.Context) error {
 	return nil
 }
 
+func (c *Client) CancelCryptoOrderById(ctx context.Context, id string) error {
+
+	var ordUrl = EPCryptoOrders + id + "/cancel/"
+
+	post, err := http.NewRequest("POST", ordUrl, nil)
+	if err != nil {
+		return err
+	}
+
+	var output CryptoOrderOutput
+	err = c.DoAndDecode(ctx, post, &output)
+
+	if err != nil {
+		return errors.Wrap(err, "could not decode response")
+	}
+
+	if output.RejectReason != "" {
+		return errors.New(output.RejectReason)
+	}
+	return nil
+}
+
+
 func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize int64) ([]CryptoOrderOutput, string, error) {
 	var o struct {
 		Results []CryptoOrderOutput
