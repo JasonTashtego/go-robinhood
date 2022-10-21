@@ -8,10 +8,10 @@ const _OrderSide_name = "SellBuy"
 
 var _OrderSide_index = [...]uint8{0, 4, 7}
 
-func (i OrderSide) String() string {
-	i -= 1
-	if i < 0 || i >= OrderSide(len(_OrderSide_index)-1) {
-		return "OrderSide(" + strconv.FormatInt(int64(i+1), 10) + ")"
+func (o OrderSide) String() string {
+	o -= 1
+	if o < 0 || o >= OrderSide(len(_OrderSide_index)-1) {
+		return "OrderSide(" + strconv.FormatInt(int64(o+1), 10) + ")"
 	}
-	return _OrderSide_name[_OrderSide_index[i]:_OrderSide_index[i+1]]
+	return _OrderSide_name[_OrderSide_index[o]:_OrderSide_index[o+1]]
 }

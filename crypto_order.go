@@ -63,8 +63,6 @@ type CryptoOrderOutput struct {
 	TimeInForce             string      `json:"time_in_force"`
 	Type                    string      `json:"type"`
 	UpdatedAt               time.Time   `json:"updated_at"`
-
-	client *Client
 }
 
 func (c *Client) CreateCryptoOrder(currId string) *CryptoOrder {
@@ -102,19 +100,18 @@ func (c *Client) SubmitCryptoOrder(ctx context.Context, o *CryptoOrder) (*Crypto
 
 	var out CryptoOrderOutput
 	err = c.DoAndDecode(ctx, post, &out)
-	out.client = c
 	return &out, err
 }
 
 // Cancel will cancel the order.
-func (o *CryptoOrderOutput) Cancel(ctx context.Context) error {
+func (o *CryptoOrderOutput) Cancel(ctx context.Context, c *Client) error {
 	post, err := http.NewRequest("POST", o.CancelURL, nil)
 	if err != nil {
 		return err
 	}
 
 	var output CryptoOrderOutput
-	err = o.client.DoAndDecode(ctx, post, &output)
+	err = c.DoAndDecode(ctx, post, &output)
 
 	if err != nil {
 		return errors.Wrap(err, "could not decode response")
@@ -149,7 +146,6 @@ func (c *Client) CancelCryptoOrderById(ctx context.Context, id string) error {
 	return nil
 }
 
-
 func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize int64) ([]CryptoOrderOutput, string, error) {
 	var o struct {
 		Results []CryptoOrderOutput
@@ -169,15 +165,11 @@ func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize in
 		return o.Results, o.Next, err
 	}
 
-	for i := range o.Results {
-		o.Results[i].client = c
-	}
-
 	return o.Results, o.Next, nil
 }
 
 // Update returns any errors and updates the item with any recent changes.
-func (o *CryptoOrderOutput) Update(ctx context.Context) error {
+func (o *CryptoOrderOutput) Update(ctx context.Context, c *Client) error {
 	ordUrl := EPCryptoOrders + fmt.Sprintf("%s", o.ID)
-	return o.client.GetAndDecode(ctx, ordUrl, o)
+	return c.GetAndDecode(ctx, ordUrl, o)
 }

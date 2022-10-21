@@ -119,7 +119,6 @@ func (c *Client) SubmitOrder(ctx context.Context, rhOrd *RhOrder) (*OrderOutput,
 		return &out, err
 	}
 
-	out.client = c
 	return &out, nil
 }
 
@@ -197,24 +196,22 @@ type OrderOutput struct {
 	IpoAccessUpperPrice         float64 `json:"ipo_access_upper_price,string"`
 	IpoAccessLowerPrice         float64 `json:"ipo_access_lower_price,string"`
 	IsIpoAccessPriceFinalized   bool    `json:"is_ipo_access_price_finalized"`
-
-	client *Client
 }
 
 // Update returns any errors and updates the item with any recent changes.
-func (o *OrderOutput) Update(ctx context.Context) error {
-	return o.client.GetAndDecode(ctx, o.URL, o)
+func (o *OrderOutput) Update(ctx context.Context, client *Client) error {
+	return client.GetAndDecode(ctx, o.URL, o)
 }
 
 // Cancel attempts to cancel an odrer
-func (o OrderOutput) Cancel(ctx context.Context) error {
+func (o OrderOutput) Cancel(ctx context.Context, client *Client) error {
 	post, err := http.NewRequest("POST", o.CancelURL, nil)
 	if err != nil {
 		return err
 	}
 
 	var o2 OrderOutput
-	err = o.client.DoAndDecode(ctx, post, &o2)
+	err = client.DoAndDecode(ctx, post, &o2)
 	if err != nil {
 		return errors.Wrap(err, "could not decode response")
 	}
@@ -256,10 +253,6 @@ func (c *Client) RecentOrders(ctx context.Context) ([]OrderOutput, error) {
 		return o.Results, err
 	}
 
-	for i := range o.Results {
-		o.Results[i].client = c
-	}
-
 	return o.Results, nil
 }
 
@@ -280,10 +273,6 @@ func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64) (
 	err := c.GetAndDecode(ctx, url, &o)
 	if err != nil {
 		return o.Results, o.Next, err
-	}
-
-	for i := range o.Results {
-		o.Results[i].client = c
 	}
 
 	return o.Results, o.Next, nil
