@@ -15,6 +15,8 @@ type Position struct {
 	Quantity                float64 `json:"quantity,string"`
 	SharesHeldForBuys       float64 `json:"shares_held_for_buys,string"`
 	SharesHeldForSells      float64 `json:"shares_held_for_sells,string"`
+	
+	BaselineQuantity	    float64
 }
 
 type OptionPostion struct {
