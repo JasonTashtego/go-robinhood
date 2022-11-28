@@ -17,6 +17,12 @@ type CryptoHolding struct {
 		IntradayQuantity  float64 `json:"intraday_quantity,string"`
 		MarkedCostBasis   float64 `json:"marked_cost_basis,string"`
 		MarkedQuantity    float64 `json:"marked_quantity,string"`
+
+		DirectTransferCostBasis float64 `json:"direct_transfer_cost_basis,string"`
+		DirectTransferQuantity  float64 `json:"direct_transfer_quantity,string"`
+		DirectRewardCostBasis   float64 `json:"direct_reward_cost_basis,string"`
+		DirectRewardQuantity	float64 `json:"direct_reward_quantity,string"`
+
 	} `json:"cost_bases"`
 	CreatedAt time.Time `json:"created_at"`
 	Currency  struct {
