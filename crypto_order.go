@@ -146,7 +146,7 @@ func (c *Client) CancelCryptoOrderById(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize int64) ([]CryptoOrderOutput, string, error) {
+func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize int64, stateFilter string) ([]CryptoOrderOutput, string, error) {
 	var o struct {
 		Results []CryptoOrderOutput
 		Next    string
@@ -155,6 +155,13 @@ func (c *Client) GetCryptoOrders(ctx context.Context, nextUrl *string, pgSize in
 	url := EPCryptoOrders
 	if pgSize != 0 {
 		url = url + fmt.Sprintf("?page_size=%d", pgSize)
+		if len(stateFilter) > 0 {
+			url = url + fmt.Sprintf("&state=%s", stateFilter)
+		}
+	} else {
+		if len(stateFilter) > 0 {
+			url = url + fmt.Sprintf("?state=%s", stateFilter)
+		}
 	}
 	if nextUrl != nil {
 		url = *nextUrl

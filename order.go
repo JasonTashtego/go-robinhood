@@ -256,7 +256,7 @@ func (c *Client) RecentOrders(ctx context.Context) ([]OrderOutput, error) {
 	return o.Results, nil
 }
 
-func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64) ([]OrderOutput, string, error) {
+func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64, stateFilter string) ([]OrderOutput, string, error) {
 	var o struct {
 		Results []OrderOutput
 		Next    string
@@ -264,7 +264,14 @@ func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64) (
 
 	url := EPOrders
 	if pgSize != 0 {
-		url = url + fmt.Sprintf("?page_size=%d", pgSize)
+		url = url + fmt.Sprintf("?page_size=%d&state=queued", pgSize)
+		if len(stateFilter) > 0 {
+			url = url + fmt.Sprintf("&state=%s", stateFilter)
+		}
+	} else {
+		if len(stateFilter) > 0 {
+			url = url + fmt.Sprintf("?state=%s", stateFilter)
+		}
 	}
 	if nextUrl != nil {
 		url = *nextUrl
