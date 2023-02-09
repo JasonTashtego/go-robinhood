@@ -264,7 +264,7 @@ func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64, s
 
 	url := EPOrders
 	if pgSize != 0 {
-		url = url + fmt.Sprintf("?page_size=%d&state=queued", pgSize)
+		url = url + fmt.Sprintf("?page_size=%d", pgSize)
 		if len(stateFilter) > 0 {
 			url = url + fmt.Sprintf("&state=%s", stateFilter)
 		}
@@ -273,6 +273,7 @@ func (c *Client) GetOrders(ctx context.Context, nextUrl *string, pgSize int64, s
 			url = url + fmt.Sprintf("?state=%s", stateFilter)
 		}
 	}
+
 	if nextUrl != nil {
 		url = *nextUrl
 	}
