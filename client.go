@@ -57,7 +57,7 @@ type Client struct {
 // available in this package, including a Cookie-based cache.
 func Dial(ctx context.Context, s oauth2.TokenSource) (*Client, error) {
 	c := &Client{
-		Client: oauth2.NewClient(context.Background(), s),
+		Client: oauth2.NewClient(ctx, s),
 	}
 
 	// allo redirect to secure only.

@@ -19,6 +19,8 @@ const DefaultClientID = "c82SH0WZOsabOXGP2sxqcj34FxkvfnWRZBKlBjFS"
 type OAuth struct {
 	Endpoint, ClientID, Username, Password, MFA string
 	DeviceID                                    string
+
+	HttpClient *http.Client
 }
 
 // ErrMFARequired indicates the MFA was required but not provided.
@@ -42,6 +44,10 @@ func (p *OAuth) Token() (*oauth2.Token, error) {
 	cliID := p.ClientID
 	if cliID == "" {
 		cliID = DefaultClientID
+	}
+
+	if p.HttpClient == nil {
+		p.HttpClient = http.DefaultClient
 	}
 
 	authDtr := RhAuth{
@@ -70,7 +76,7 @@ func (p *OAuth) Token() (*oauth2.Token, error) {
 		return nil, errors.Wrap(err, "could not create request")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
+	res, err := p.HttpClient.Do(req)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "could not post login")
