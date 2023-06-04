@@ -39,6 +39,8 @@ const (
 
 	EPHistPortfolio = EPHistory + "portfolio/"
 
+	RHApiVersion = "1.431.4"
+
 	apiWaitTime int64 = 100
 )
 
@@ -140,6 +142,8 @@ func (c *Client) DoAndDecode(ctx context.Context, req *http.Request, dest interf
 	}
 	c.lastCall = time.Now()
 
+	req.Header.Add("x-robinhood-api-version", RHApiVersion)
+	
 	res, err := c.Do(req.WithContext(ctx))
 	if err != nil {
 		return err

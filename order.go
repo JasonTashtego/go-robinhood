@@ -20,8 +20,9 @@ func (o OrderSide) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + strings.ToLower(o.String()) + "\""), nil
 }
 
-//go:generate stringer -type OrderSide
 // Buy/Sell
+//
+//go:generate stringer -type OrderSide
 const (
 	Sell OrderSide = iota + 1
 	Buy
@@ -35,8 +36,9 @@ func (o OrderType) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%q", strings.ToLower(o.String()))), nil
 }
 
-//go:generate stringer -type OrderType
 // Well-known order types. Default is Market.
+//
+//go:generate stringer -type OrderType
 const (
 	Market OrderType = iota
 	Limit
@@ -74,17 +76,20 @@ type RhOrder struct {
 
 	OverrideDayTradeChecks bool `json:"override_day_trade_checks,omitempty"`
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
+
+	OrderFormVersion int `json:"order_form_version"`
 }
 
 func (c *Client) CreateOrder(i *Instrument) *RhOrder {
 
 	newOrd := RhOrder{
-		Account:     c.Account.URL,
-		Symbol:      i.Symbol,
-		Instrument:  i.URL,
-		TimeInForce: strings.ToLower(GTC.String()),
-		Type:        strings.ToLower(Market.String()),
-		Trigger:     ImmTrigger,
+		Account:          c.Account.URL,
+		Symbol:           i.Symbol,
+		Instrument:       i.URL,
+		TimeInForce:      strings.ToLower(GTC.String()),
+		Type:             strings.ToLower(Market.String()),
+		Trigger:          ImmTrigger,
+		OrderFormVersion: 2,
 	}
 	return &newOrd
 }
