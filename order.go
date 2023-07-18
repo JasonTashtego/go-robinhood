@@ -78,6 +78,7 @@ type RhOrder struct {
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
 
 	OrderFormVersion int `json:"order_form_version"`
+	PresetPercentLimit float64  `json:"preset_percent_limit"`
 }
 
 func (c *Client) CreateOrder(i *Instrument) *RhOrder {
@@ -86,10 +87,11 @@ func (c *Client) CreateOrder(i *Instrument) *RhOrder {
 		Account:          c.Account.URL,
 		Symbol:           i.Symbol,
 		Instrument:       i.URL,
-		TimeInForce:      strings.ToLower(GTC.String()),
+		TimeInForce:      strings.ToLower(GFD.String()),
 		Type:             strings.ToLower(Market.String()),
 		Trigger:          ImmTrigger,
 		OrderFormVersion: 2,
+		PresetPercentLimit: 0.05,
 	}
 	return &newOrd
 }
