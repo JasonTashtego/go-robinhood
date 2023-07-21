@@ -45,6 +45,11 @@ const (
 )
 
 const (
+	OrderFormVersionBuy = 2
+	OrderFormVersionSell = 4
+)
+
+const (
 	StopTrigger = "stop"
 	ImmTrigger  = "immediate"
 
@@ -78,7 +83,8 @@ type RhOrder struct {
 	OverrideDtbpChecks     bool `json:"override_dtbp_checks,omitempty"`
 
 	OrderFormVersion int `json:"order_form_version"`
-	PresetPercentLimit float64  `json:"preset_percent_limit"`
+	PresetPercentLimit float64  `json:"preset_percent_limit,omitempty"`
+	MarketHours string    `json:"market_hours,omitempty"`
 }
 
 func (c *Client) CreateOrder(i *Instrument) *RhOrder {
@@ -90,8 +96,7 @@ func (c *Client) CreateOrder(i *Instrument) *RhOrder {
 		TimeInForce:      strings.ToLower(GFD.String()),
 		Type:             strings.ToLower(Market.String()),
 		Trigger:          ImmTrigger,
-		OrderFormVersion: 2,
-		PresetPercentLimit: 0.05,
+		MarketHours: 	 "regular_hours",
 	}
 	return &newOrd
 }
